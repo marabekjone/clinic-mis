@@ -1,4 +1,3 @@
-# Модуль А: Лицензии и Услуги
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -22,9 +21,15 @@ def get_licenses():
 def get_services():
     return jsonify(services)
 
+@app.route('/health', methods=['GET'])
+def health():
+    return {"status": "ok", "module": "A"}
+
 if __name__ == '__main__':
-    print("Модуль А запущен на http://localhost:5001")
+    print("Модуль А запущен на http://0.0.0.0:5001")
     print("Доступные эндпоинты:")
     print("  GET /licenses - список лицензий")
     print("  GET /services - список услуг")
-    app.run(port=5001, debug=True)
+    print("  GET /health - проверка здоровья")
+    # ВАЖНО: host='0.0.0.0' для Docker
+    app.run(host='0.0.0.0', port=5001, debug=True)

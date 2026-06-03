@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Модуль А: Лицензии и Услуги
+  module-a:
+    build:
+      context: .
+      dockerfile: Dockerfile.module_a
+    container_name: clinic-module-a
+    ports:
+      - "5001:5001"
+    networks:
+      - clinic-network
+    restart: unless-stopped
+
+  # Модуль Б: Назначения и Лекарства
+  module-b:
+    build:
+      context: .
+      dockerfile: Dockerfile.module_b
+    container_name: clinic-module-b
+    ports:
+      - "5002:5002"
+    networks:
+      - clinic-network
+    restart: unless-stopped
+
+  # Модуль В: Счета
+  module-c:
+    build:
+      context: .
+      dockerfile: Dockerfile.module_c
+    container_name: clinic-module-c
+    ports:
+      - "3000:3000"
+    networks:
+      - clinic-network
+    restart: unless-stopped
+
+networks:
+  clinic-network:
+    driver: bridge
+
+# Для production можно добавить:
+#   postgres:
+#     image: postgres:15
+#     environment:
+#       POSTGRES_DB: clinic
+#       POSTGRES_USER: admin
+#       POSTGRES_PASSWORD: secret
+#     ports:
+#       - "5432:5432"
+#     networks:
+#       - clinic-network
+#   
+#   redis:
+#     image: redis:7-alpine
+#     ports:
+#       - "6379:6379"
+#     networks:
+#       - clinic-network

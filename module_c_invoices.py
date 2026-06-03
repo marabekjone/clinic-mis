@@ -1,4 +1,3 @@
-# Модуль В: Счета
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -6,7 +5,6 @@ app = Flask(__name__)
 invoices = []
 next_id = 1
 
-# Данные из других модулей (для демонстрации)
 SERVICES = {
     1: {"name": "Приём терапевта", "price": 1500},
     2: {"name": "УЗИ", "price": 2500},
@@ -21,7 +19,11 @@ MEDICINES = {
 
 @app.route('/')
 def root():
-    return {"message": "МИС Модуль В - Счета"}
+    return {"message": "МИС Модуль В - Счета", "status": "ok"}
+
+@app.route('/health', methods=['GET'])
+def health():
+    return {"status": "ok", "module": "C"}
 
 @app.route('/invoices/create', methods=['POST'])
 def create_invoice():
@@ -71,9 +73,11 @@ def pay_invoice(inv_id):
     return jsonify(inv)
 
 if __name__ == '__main__':
-    print("Модуль В запущен на http://localhost:3000")
+    print("Модуль В запущен на http://0.0.0.0:3000")
     print("Доступные эндпоинты:")
+    print("  GET /health - проверка здоровья")
     print("  POST /invoices/create - создать счёт")
     print("  GET /invoices - список счетов")
     print("  POST /invoices/{id}/pay - оплатить счёт")
-    app.run(port=3000, debug=True)
+    # ВАЖНО: host='0.0.0.0' для Docker
+    app.run(host='0.0.0.0', port=3000, debug=True)

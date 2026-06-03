@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Копируем только нужные файлы
+COPY module_a_licenses_services.py .
+COPY requirements.txt .
+
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir flask
+
+# Открываем порт
+EXPOSE 5001
+
+# Запускаем с правильным host
+CMD ["python", "module_a_licenses_services.py"]

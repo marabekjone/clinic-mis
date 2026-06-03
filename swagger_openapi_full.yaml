@@ -1,0 +1,569 @@
+openapi: 3.0.0
+info:
+  title: Clinic Management System - Complete API Documentation
+  description: |
+    ## Clinic MIS API Documentation
+    
+    This is the complete API documentation for all three microservices:
+    - **Module A** (Port 5001): Medical Services and Licenses
+    - **Module B** (Port 5002): Medicines and Appointments
+    - **Module C** (Port 3000): Invoices and Payments
+    
+    ## Base URLs
+    | Module | Base URL |
+    |--------|----------|
+    | Module A | `http://localhost:5001` |
+    | Module B | `http://localhost:5002` |
+    | Module C | `http://localhost:3000` |
+    
+  version: 1.0.0
+  contact:
+    name: marabekjone
+    email: osmanovm1807@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5001
+    description: Module A - Services (Local)
+  - url: http://localhost:5002
+    description: Module B - Medicines (Local)
+  - url: http://localhost:3000
+    description: Module C - Invoices (Local)
+
+tags:
+  - name: Module A - Services
+    description: Medical services and licenses management
+  - name: Module B - Medicines
+    description: Medicines and appointments management
+  - name: Module C - Invoices
+    description: Invoices and payments management
+
+# ============================================
+# MODULE A - SERVICES
+# ============================================
+
+paths:
+  # Module A endpoints
+  /services:
+    get:
+      tags:
+        - Module A - Services
+      summary: Get all medical services
+      description: Returns a list of all available medical services with their prices and categories
+      operationId: getServices
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+              example:
+                - Id: 1
+                  Name: "Therapist Consultation"
+                  Price: 1500
+                  Category: "Consultation"
+                - Id: 2
+                  Name: "Ultrasound"
+                  Price: 2500
+                  Category: "Diagnostics"
+                - Id: 3
+                  Name: "Blood Test"
+                  Price: 800
+                  Category: "Laboratory"
+        '500':
+          description: Server error
+  
+  /services/{id}:
+    get:
+      tags:
+        - Module A - Services
+      summary: Get service by ID
+      description: Returns a single service by its unique identifier
+      operationId: getServiceById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Service ID
+          example: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          description: Service not found
+
+  /licenses:
+    get:
+      tags:
+        - Module A - Services
+      summary: Get all licenses
+      description: Returns a list of all medical licenses
+      operationId: getLicenses
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/License'
+              example:
+                - Id: 1
+                  Name: "Medical License"
+                  Status: "active"
+                  LicenseNumber: "LIC-001"
+                - Id: 2
+                  Name: "Telemedicine License"
+                  Status: "active"
+                  LicenseNumber: "LIC-002"
+
+  /health:
+    get:
+      tags:
+        - Module A - Services
+      summary: Health check
+      description: Check if Module A is running properly
+      operationId: healthCheckA
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  # ============================================
+  # MODULE B - MEDICINES
+  # ============================================
+
+  /medicines:
+    get:
+      tags:
+        - Module B - Medicines
+      summary: Get all medicines
+      description: Returns a list of all available medicines with dosages and prices
+      operationId: getMedicines
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Medicine'
+              example:
+                - id: 1
+                  name: "Amoxicillin"
+                  dosage: "500 mg"
+                  price: 300
+                - id: 2
+                  name: "Paracetamol"
+                  dosage: "250 mg"
+                  price: 150
+                - id: 3
+                  name: "Nurofen"
+                  dosage: "200 mg"
+                  price: 200
+
+  /appointments:
+    get:
+      tags:
+        - Module B - Medicines
+      summary: Get all appointments
+      description: Returns a list of all medical appointments
+      operationId: getAppointments
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+
+  /appointments/create:
+    post:
+      tags:
+        - Module B - Medicines
+      summary: Create a new appointment
+      description: Creates a new medical appointment with prescribed medicines
+      operationId: createAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequest'
+            example:
+              id: 0
+              patient_name: "Ivan Petrov"
+              doctor_name: "Dr. Smirnova"
+              diagnosis: "Cold"
+              medicines: [1, 2]
+      responses:
+        '200':
+          description: Appointment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+
+  # ============================================
+  # MODULE C - INVOICES
+  # ============================================
+
+  /invoices:
+    get:
+      tags:
+        - Module C - Invoices
+      summary: Get all invoices
+      description: Returns a list of all invoices with their status
+      operationId: getInvoices
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+              example:
+                - Id: 1
+                  PatientName: "Ivan Petrov"
+                  TotalAmount: 4300
+                  Status: "paid"
+                - Id: 2
+                  PatientName: "Maria Sidorova"
+                  TotalAmount: 2450
+                  Status: "unpaid"
+
+  /invoices/create:
+    post:
+      tags:
+        - Module C - Invoices
+      summary: Create a new invoice
+      description: Creates a new invoice based on selected services and medicines
+      operationId: createInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceRequest'
+            examples:
+              withServices:
+                summary: Invoice with services only
+                value:
+                  patient_name: "Ivan Petrov"
+                  service_ids: [1, 2]
+                  medicine_ids: []
+              withMedicines:
+                summary: Invoice with medicines only
+                value:
+                  patient_name: "Ivan Petrov"
+                  service_ids: []
+                  medicine_ids: [1, 2]
+              full:
+                summary: Invoice with both
+                value:
+                  patient_name: "Ivan Petrov"
+                  service_ids: [1, 2]
+                  medicine_ids: [1]
+      responses:
+        '201':
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '400':
+          description: Bad request (no items selected)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /invoices/{id}/pay:
+    post:
+      tags:
+        - Module C - Invoices
+      summary: Pay an invoice
+      description: Marks an invoice as paid
+      operationId: payInvoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Invoice ID
+          example: 1
+      responses:
+        '200':
+          description: Payment successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          description: Invoice not found
+
+# ============================================
+# SCHEMAS / MODELS
+# ============================================
+
+components:
+  schemas:
+    # Module A schemas
+    Service:
+      type: object
+      properties:
+        Id:
+          type: integer
+          description: Unique service identifier
+          example: 1
+        Name:
+          type: string
+          description: Service name
+          example: "Therapist Consultation"
+        Price:
+          type: number
+          format: float
+          description: Service price in RUB
+          example: 1500
+        Category:
+          type: string
+          description: Service category
+          enum: ["Consultation", "Diagnostics", "Laboratory", "Surgery"]
+          example: "Consultation"
+      required:
+        - Id
+        - Name
+        - Price
+
+    License:
+      type: object
+      properties:
+        Id:
+          type: integer
+          example: 1
+        Name:
+          type: string
+          example: "Medical License"
+        Status:
+          type: string
+          enum: ["active", "inactive", "expired"]
+          example: "active"
+        LicenseNumber:
+          type: string
+          example: "LIC-001"
+      required:
+        - Id
+        - Name
+        - LicenseNumber
+
+    # Module B schemas
+    Medicine:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Amoxicillin"
+        dosage:
+          type: string
+          example: "500 mg"
+        price:
+          type: number
+          format: float
+          example: 300
+      required:
+        - id
+        - name
+        - price
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        patient_name:
+          type: string
+          example: "Ivan Petrov"
+        doctor_name:
+          type: string
+          example: "Dr. Smirnova"
+        diagnosis:
+          type: string
+          example: "Cold"
+        medicines:
+          type: array
+          items:
+            type: integer
+          example: [1, 2]
+
+    AppointmentRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Use 0 for new appointment
+          example: 0
+        patient_name:
+          type: string
+          required: true
+          example: "New Patient"
+        doctor_name:
+          type: string
+          required: true
+          example: "Dr. Smith"
+        diagnosis:
+          type: string
+          example: "Flu"
+        medicines:
+          type: array
+          items:
+            type: integer
+          example: [1]
+      required:
+        - id
+        - patient_name
+        - doctor_name
+
+    AppointmentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["created"]
+          example: "created"
+        id:
+          type: integer
+          example: 10
+        message:
+          type: string
+          example: "Appointment created"
+
+    # Module C schemas
+    Invoice:
+      type: object
+      properties:
+        Id:
+          type: integer
+          example: 1
+        PatientName:
+          type: string
+          example: "Ivan Petrov"
+        TotalAmount:
+          type: number
+          format: float
+          example: 4300
+        Status:
+          type: string
+          enum: ["paid", "unpaid"]
+          example: "paid"
+
+    InvoiceRequest:
+      type: object
+      properties:
+        patient_name:
+          type: string
+          required: true
+          example: "Ivan Petrov"
+        service_ids:
+          type: array
+          description: Array of service IDs
+          items:
+            type: integer
+          example: [1, 2]
+        medicine_ids:
+          type: array
+          description: Array of medicine IDs
+          items:
+            type: integer
+          example: [1]
+      required:
+        - patient_name
+
+    InvoiceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        patient:
+          type: string
+          example: "Ivan Petrov"
+        total:
+          type: number
+          format: float
+          example: 4300
+        status:
+          type: string
+          enum: ["unpaid", "paid"]
+          example: "unpaid"
+
+    PaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["paid"]
+          example: "paid"
+        id:
+          type: integer
+          example: 1
+
+    # Common schemas
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["ok", "degraded", "down"]
+          example: "ok"
+        module:
+          type: string
+          enum: ["A", "B", "C"]
+          example: "A"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "No services or medicines selected"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Optional API key for authentication (not implemented yet)
+
+# Security (optional, for future)
+security:
+  - ApiKeyAuth: []
+
+# External documentation
+externalDocs:
+  description: GitHub Repository
+  url: https://github.com/marabekjone/clinic-mis

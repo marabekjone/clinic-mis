@@ -1,0 +1,93 @@
+================================================================================
+                    UML STATE MACHINE DIAGRAM - ORDER PROCESSING
+================================================================================
+
+                                    [*]
+                                     |
+                                     v
+                                 +-------+
+                                 |  NEW  |
+                                 +-------+
+                                     |
+                                     | START
+                                     v
+                               +-----------+
+                               |VALIDATING |
+                               +-----------+
+                                     |
+                +--------------------+--------------------+
+                |                                         |
+                | VALIDATION_SUCCESS                     | VALIDATION_FAILED
+                v                                         v
+        +-----------------+                        +----------+
+        |RESERVING_STOCK  |                        |  FAILED  |
+        +-----------------+                        +----------+
+                |                                         |
+                | STOCK_RESERVED                          |
+                v                                         |
+        +----------------+                               |
+        |STOCK_RESERVED  |                               |
+        +----------------+                               |
+                |                                         |
+                v                                         |
+        +------------------+                             |
+        |CREATING_INVOICE  |                             |
+        +------------------+                             |
+                |                                         |
+        +-------+-------+                                 |
+        |               |                                 |
+        |INVOICE_CREATED| INVOICE_FAILED                  |
+        v               v                                 |
++----------------+ +-------------+                        |
+|INVOICE_CREATED | |COMPENSATING |                        |
++----------------+ +-------------+                        |
+        |               |                                 |
+        v               v                                 |
++------------------+ +---------+                          |
+|PROCESSING_PAYMENT| |CANCELLED|                          |
++------------------+ +---------+                          |
+        |               ^                                 |
+    +---+---+           |                                 |
+    |       |           |                                 |
+    v       v           |                                 |
++------+ +---------+    |                                 |
+| PAID | |PAYMENT_ |    |                                 |
++------+ |FAILED   |----+                                 |
+    |    +---------+                                      |
+    |                                                     |
+    v                                                     |
++---------+                                               |
+|COMPLETED|                                               |
++---------+                                               |
+    |                                                     |
+    v                                                     |
+   [*] <--------------------------------------------------+
+
+================================================================================
+SAGA PATTERN - TRANSACTION COMPENSATION FLOW:
+================================================================================
+
+Step 1: RESERVING_STOCK     -> Compensation: Release stock reservation
+Step 2: CREATING_INVOICE    -> Compensation: Release stock + Cancel invoice
+Step 3: PROCESSING_PAYMENT  -> Compensation: Release stock + Refund payment
+
+================================================================================
+ORDER STATES DESCRIPTION:
+================================================================================
+
+| State              | Description                                      |
+|--------------------|--------------------------------------------------|
+| NEW                | Initial state after order creation               |
+| VALIDATING         | Checking order data validity                     |
+| RESERVING_STOCK    | Checking and reserving product stock             |
+| STOCK_RESERVED     | Stock successfully reserved                      |
+| CREATING_INVOICE   | Creating invoice for the order                   |
+| INVOICE_CREATED    | Invoice created successfully                     |
+| PROCESSING_PAYMENT | Processing payment through payment gateway       |
+| PAID               | Payment successful                               |
+| COMPLETED          | Order completed successfully                     |
+| FAILED             | Order failed (will be compensated)               |
+| COMPENSATING       | Executing compensation actions (Saga pattern)    |
+| CANCELLED          | Order cancelled after compensation               |
+
+================================================================================

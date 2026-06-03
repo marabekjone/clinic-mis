@@ -1,0 +1,82 @@
+2026-06-03 21:01:35,796 | INFO     | Creating new order 1 for patient Ivan Petrov
+2026-06-03 21:01:35,797 | INFO     | Order items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 2}, {'id': 2, 'name': 'Paracetamol', 'price': 150, 'quantity': 1}, {'id': 3, 'name': 'Therapist Consultation', 'price': 1500, 'quantity': 1}]
+2026-06-03 21:01:35,797 | INFO     | Total amount: $2250
+2026-06-03 21:01:35,797 | INFO     | Order 1 validated successfully
+2026-06-03 21:01:35,797 | INFO     | Checking stock for items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 2}, {'id': 2, 'name': 'Paracetamol', 'price': 150, 'quantity': 1}, {'id': 3, 'name': 'Therapist Consultation', 'price': 1500, 'quantity': 1}]
+2026-06-03 21:01:35,797 | INFO     | Item 1: available=100, required=2 -> OK
+2026-06-03 21:01:35,798 | INFO     | Item 2: available=200, required=1 -> OK
+2026-06-03 21:01:35,798 | INFO     | Item 3: available=50, required=1 -> OK
+2026-06-03 21:01:35,798 | INFO     | Reserving stock for transaction txn_1_1780509695
+2026-06-03 21:01:35,798 | INFO     | Checking stock for items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 2}, {'id': 2, 'name': 'Paracetamol', 'price': 150, 'quantity': 1}, {'id': 3, 'name': 'Therapist Consultation', 'price': 1500, 'quantity': 1}]
+2026-06-03 21:01:35,798 | INFO     | Item 1: available=100, required=2 -> OK
+2026-06-03 21:01:35,798 | INFO     | Item 2: available=200, required=1 -> OK
+2026-06-03 21:01:35,798 | INFO     | Item 3: available=50, required=1 -> OK
+2026-06-03 21:01:35,798 | INFO     | Reserved 2 of item 1. Remaining stock: 98
+2026-06-03 21:01:35,798 | INFO     | Reserved 1 of item 2. Remaining stock: 199
+2026-06-03 21:01:35,798 | INFO     | Reserved 1 of item 3. Remaining stock: 49
+2026-06-03 21:02:35,261 | INFO     | Creating new order 1 for patient Ivan Petrov
+2026-06-03 21:02:35,261 | INFO     | Total amount: $2250
+2026-06-03 21:02:35,261 | INFO     | Order 1 transitioned to VALIDATING
+2026-06-03 21:02:35,262 | INFO     | Order 1 validated successfully
+2026-06-03 21:02:35,262 | INFO     | Order 1 transitioned to RESERVING_STOCK
+2026-06-03 21:02:35,262 | INFO     | Checking stock for items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 2}, {'id': 2, 'name': 'Paracetamol', 'price': 150, 'quantity': 1}, {'id': 3, 'name': 'Consultation', 'price': 1500, 'quantity': 1}]
+2026-06-03 21:02:35,262 | INFO     | Item 1: OK
+2026-06-03 21:02:35,262 | INFO     | Item 2: OK
+2026-06-03 21:02:35,262 | INFO     | Item 3: OK
+2026-06-03 21:02:35,262 | INFO     | Reserving stock for transaction txn_1_1780509755
+2026-06-03 21:02:35,262 | INFO     | Checking stock for items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 2}, {'id': 2, 'name': 'Paracetamol', 'price': 150, 'quantity': 1}, {'id': 3, 'name': 'Consultation', 'price': 1500, 'quantity': 1}]
+2026-06-03 21:02:35,262 | INFO     | Item 1: OK
+2026-06-03 21:02:35,262 | INFO     | Item 2: OK
+2026-06-03 21:02:35,262 | INFO     | Item 3: OK
+2026-06-03 21:02:35,262 | INFO     | Reserved 2 of item 1. Remaining: 98
+2026-06-03 21:02:35,262 | INFO     | Reserved 1 of item 2. Remaining: 199
+2026-06-03 21:02:35,262 | INFO     | Reserved 1 of item 3. Remaining: 49
+2026-06-03 21:02:35,262 | INFO     | Order 1 transitioned to STOCK_RESERVED
+2026-06-03 21:02:35,263 | INFO     | Order 1 transitioned to CREATING_INVOICE
+2026-06-03 21:02:35,263 | INFO     | Creating invoice for order: 1
+2026-06-03 21:02:35,263 | INFO     | Invoice created with ID: 1
+2026-06-03 21:02:35,263 | INFO     | Order 1 transitioned to INVOICE_CREATED
+2026-06-03 21:02:35,263 | INFO     | Order 1 transitioned to PROCESSING_PAYMENT
+2026-06-03 21:02:35,263 | INFO     | Processing payment of $2250 for order 1
+2026-06-03 21:02:35,765 | INFO     | Payment successful for order 1
+2026-06-03 21:02:35,767 | INFO     | Order 1 transitioned to PAID
+2026-06-03 21:02:35,767 | INFO     | Invoice 1 marked as paid
+2026-06-03 21:02:35,767 | INFO     | Order 1 transitioned to COMPLETED
+2026-06-03 21:02:35,768 | INFO     | Creating new order 1 for patient Petr Ivanov
+2026-06-03 21:02:35,768 | INFO     | Total amount: $60000
+2026-06-03 21:02:35,768 | INFO     | Order 1 transitioned to VALIDATING
+2026-06-03 21:02:35,768 | INFO     | Order 1 validated successfully
+2026-06-03 21:02:35,769 | INFO     | Order 1 transitioned to RESERVING_STOCK
+2026-06-03 21:02:35,769 | INFO     | Checking stock for items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 200}]
+2026-06-03 21:02:35,769 | ERROR    | Order 1 failed: Stock insufficient: [{'item_id': 1, 'available': 100, 'required': 200}]
+2026-06-03 21:02:35,769 | INFO     | Order 1 transitioned to FAILED
+2026-06-03 21:02:35,769 | WARNING  | Starting compensation for order 1
+2026-06-03 21:02:35,769 | INFO     | Order 1 transitioned to COMPENSATING
+2026-06-03 21:02:35,769 | INFO     | Order 1 transitioned to CANCELLED
+2026-06-03 21:02:35,770 | INFO     | Order 999 transitioned to VALIDATING
+2026-06-03 21:02:35,770 | INFO     | Order 999 validated successfully
+2026-06-03 21:02:35,770 | INFO     | Order 999 transitioned to RESERVING_STOCK
+2026-06-03 21:02:35,770 | INFO     | Checking stock for items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 1}]
+2026-06-03 21:02:35,770 | INFO     | Item 1: OK
+2026-06-03 21:02:35,770 | INFO     | Reserving stock for transaction txn_999_1780509755
+2026-06-03 21:02:35,770 | INFO     | Checking stock for items: [{'id': 1, 'name': 'Amoxicillin', 'price': 300, 'quantity': 1}]
+2026-06-03 21:02:35,770 | INFO     | Item 1: OK
+2026-06-03 21:02:35,770 | INFO     | Reserved 1 of item 1. Remaining: 99
+2026-06-03 21:02:35,771 | INFO     | Order 999 transitioned to STOCK_RESERVED
+2026-06-03 21:02:35,771 | INFO     | Order 999 transitioned to CREATING_INVOICE
+2026-06-03 21:02:35,771 | INFO     | Creating invoice for order: 999
+2026-06-03 21:02:35,771 | INFO     | Invoice created with ID: 1
+2026-06-03 21:02:35,771 | INFO     | Order 999 transitioned to INVOICE_CREATED
+2026-06-03 21:02:35,771 | INFO     | Order 999 transitioned to PROCESSING_PAYMENT
+2026-06-03 21:02:35,771 | INFO     | Processing payment of $15000 for order 999
+2026-06-03 21:02:36,271 | ERROR    | Payment failed for order 999
+2026-06-03 21:02:36,272 | ERROR    | Order 999 failed: Payment failed: Insufficient funds
+2026-06-03 21:02:36,272 | INFO     | Order 999 transitioned to FAILED
+2026-06-03 21:02:36,272 | WARNING  | Starting compensation for order 999
+2026-06-03 21:02:36,273 | INFO     | Order 999 transitioned to COMPENSATING
+2026-06-03 21:02:36,273 | INFO     | Executing compensation: refund_payment
+2026-06-03 21:02:36,274 | INFO     | Refunding $15000 for order 999
+2026-06-03 21:02:36,274 | INFO     | Executing compensation: release_stock
+2026-06-03 21:02:36,274 | INFO     | Releasing stock for transaction txn_999_1780509755
+2026-06-03 21:02:36,274 | INFO     | Released 1 of item 1
+2026-06-03 21:02:36,274 | INFO     | Order 999 transitioned to CANCELLED

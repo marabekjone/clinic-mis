@@ -1,0 +1,12 @@
+cat > requirements-dev.txt << 'EOF'
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-xdist==3.5.0
+requests==2.31.0
+
+# Unit tests
+pytest-mock==3.12.0
+
+# For E2E tests
+pytest-timeout==2.2.0

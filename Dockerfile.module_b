@@ -2,8 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir fastapi uvicorn pydantic
+RUN pip install fastapi uvicorn
 
 COPY module_b_appointments_medicines.py .
 

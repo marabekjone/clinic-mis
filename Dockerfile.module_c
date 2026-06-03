@@ -2,11 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY module_c_invoices.py .
-COPY requirements.txt .
+RUN pip install flask flask-cors
 
-RUN pip install --no-cache-dir flask
+COPY module_c_simple.py .
 
 EXPOSE 3000
 
-CMD ["python", "module_c_invoices.py"]
+CMD ["python", "module_c_simple.py"]

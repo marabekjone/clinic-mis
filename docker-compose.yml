@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # Модуль А: Лицензии и Услуги
   module-a:
     build:
       context: .
@@ -12,8 +9,12 @@ services:
     networks:
       - clinic-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Модуль Б: Назначения и Лекарства
   module-b:
     build:
       context: .
@@ -24,8 +25,12 @@ services:
     networks:
       - clinic-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/medicines"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Модуль В: Счета
   module-c:
     build:
       context: .
@@ -36,26 +41,27 @@ services:
     networks:
       - clinic-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/invoices"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: clinic-frontend
+    ports:
+      - "8080:8080"
+    networks:
+      - clinic-network
+    depends_on:
+      - module-a
+      - module-b
+      - module-c
+    restart: unless-stopped
 
 networks:
   clinic-network:
     driver: bridge
-
-# Для production можно добавить:
-#   postgres:
-#     image: postgres:15
-#     environment:
-#       POSTGRES_DB: clinic
-#       POSTGRES_USER: admin
-#       POSTGRES_PASSWORD: secret
-#     ports:
-#       - "5432:5432"
-#     networks:
-#       - clinic-network
-#   
-#   redis:
-#     image: redis:7-alpine
-#     ports:
-#       - "6379:6379"
-#     networks:
-#       - clinic-network

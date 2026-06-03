@@ -7,7 +7,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  # Job 1: Линтинг и проверка кода
+  # Job 1: Linting
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -25,14 +25,11 @@ jobs:
       - name: Run black (code formatter check)
         run: black --check --diff *.py || true
       
-      - name: Run flake8 (style guide)
+      - name: Run flake8
         run: flake8 *.py --max-line-length=120 --ignore=E501,W503 || true
-      
-      - name: Run pylint (code analysis)
-        run: pylint *.py --exit-zero
 
-  # Job 2: Тестирование модулей
-  test:
+  # Job 2: Unit Tests
+  unit-tests:
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -45,31 +42,63 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install flask fastapi uvicorn pydantic pytest requests
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
       
       - name: Run unit tests
         run: |
-          # Простые тесты для проверки работоспособности
-          python -c "import module_a_licenses_services; print('Module A OK')"
-          python -c "import module_b_appointments_medicines; print('Module B OK')"
-          python -c "import module_c_invoices; print('Module C OK')"
+          python -m pytest tests/unit/ -v --tb=short --cov=. --cov-report=xml
       
-      - name: Create tests directory
-        run: mkdir -p tests
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  # Job 3: Start services for integration tests
+  setup-services:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install flask-cors
+      
+      - name: Start Module A
+        run: |
+          python module_a_simple.py &
+          sleep 5
+      
+      - name: Start Module B
+        run: |
+          python module_b_appointments_medicines.py &
+          sleep 5
+      
+      - name: Start Module C
+        run: |
+          python module_c_simple.py &
+          sleep 5
       
       - name: Run integration tests
         run: |
-          # Запускаем тесты (если есть)
-          if [ -f tests/test_integration.py ]; then
-            pytest tests/test_integration.py -v
-          else
-            echo "No integration tests found, skipping"
-          fi
+          python -m pytest tests/integration/ -v --tb=short
+      
+      - name: Run E2E tests
+        run: |
+          python -m pytest tests/e2e/ -v -s --tb=short
 
-  # Job 3: Сборка Docker образов
+  # Job 4: Docker build
   docker-build:
     runs-on: ubuntu-latest
-    needs: test
+    needs: setup-services
     steps:
       - uses: actions/checkout@v3
       
@@ -101,190 +130,4 @@ jobs:
           tags: clinic-module-c:latest
       
       - name: Verify Docker images
-        run: |
-          docker images | grep clinic-module
-          echo "✅ Все Docker образы собраны успешно"
-
-  # Job 4: Запуск Docker Compose (интеграционное тестирование)
-  docker-compose-test:
-    runs-on: ubuntu-latest
-    needs: docker-build
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install docker-compose -y
-      
-      - name: Start services with Docker Compose
-        run: |
-          docker-compose up -d
-          sleep 10  # Даём время на запуск
-      
-      - name: Check service health
-        run: |
-          # Проверяем модуль А
-          curl -f http://localhost:5001/services || exit 1
-          
-          # Проверяем модуль Б
-          curl -f http://localhost:5002/medicines || exit 1
-          
-          # Проверяем модуль В
-          curl -f http://localhost:3000/invoices || exit 1
-          
-          echo "✅ Все сервисы отвечают на запросы"
-      
-      - name: Run API integration test
-        run: |
-          # Тест создания счёта
-          curl -X POST http://localhost:3000/invoices/create \
-            -H "Content-Type: application/json" \
-            -d '{"service_ids":[1,2],"medicine_ids":[1],"patient_name":"CI Test"}' \
-            | grep -q "id" && echo "✅ Invoice creation test passed"
-      
-      - name: Docker Compose logs (if failed)
-        if: failure()
-        run: docker-compose logs
-      
-      - name: Stop services
-        if: always()
-        run: docker-compose down
-
-  # Job 5: Публикация отчёта (опционально)
-  report:
-    runs-on: ubuntu-latest
-    needs: [lint, test, docker-build, docker-compose-test]
-    if: always()
-    steps:
-      - name: Generate status report
-        run: |
-          echo "## CI/CD Pipeline Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Build | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Compose | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Все проверки успешно завершены!" >> $GITHUB_STEP_SUMMARY
-mkdir -p tests
-
-cat > tests/test_integration.py << 'EOF'
-import requests
-import json
-import time
-
-BASE_URLS = {
-    'module_a': 'http://localhost:5001',
-    'module_b': 'http://localhost:5002',
-    'module_c': 'http://localhost:3000'
-}
-
-def test_module_a_services():
-    """Тест модуля А: получение услуг"""
-    response = requests.get(f"{BASE_URLS['module_a']}/services")
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) > 0
-    assert 'name' in data[0]
-    print("✅ Модуль А: тест услуг пройден")
-
-def test_module_a_licenses():
-    """Тест модуля А: получение лицензий"""
-    response = requests.get(f"{BASE_URLS['module_a']}/licenses")
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) > 0
-    print("✅ Модуль А: тест лицензий пройден")
-
-def test_module_b_medicines():
-    """Тест модуля Б: получение лекарств"""
-    response = requests.get(f"{BASE_URLS['module_b']}/medicines")
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) > 0
-    assert 'name' in data[0]
-    print("✅ Модуль Б: тест лекарств пройден")
-
-def test_module_b_appointments():
-    """Тест модуля Б: получение назначений"""
-    response = requests.get(f"{BASE_URLS['module_b']}/appointments")
-    assert response.status_code == 200
-    data = response.json()
-    print("✅ Модуль Б: тест назначений пройден")
-
-def test_module_c_invoices():
-    """Тест модуля В: получение счетов"""
-    response = requests.get(f"{BASE_URLS['module_c']}/invoices")
-    assert response.status_code == 200
-    print("✅ Модуль В: тест счетов пройден")
-
-def test_module_c_create_invoice():
-    """Тест модуля В: создание счёта"""
-    payload = {
-        "service_ids": [1, 2],
-        "medicine_ids": [1],
-        "patient_name": "Test Patient"
-    }
-    response = requests.post(
-        f"{BASE_URLS['module_c']}/invoices/create",
-        json=payload
-    )
-    assert response.status_code == 201
-    data = response.json()
-    assert 'id' in data
-    assert data['status'] == 'не оплачен'
-    print("✅ Модуль В: тест создания счёта пройден")
-
-def test_module_c_pay_invoice():
-    """Тест модуля В: оплата счёта"""
-    # Сначала создаём счёт
-    payload = {"service_ids": [1], "medicine_ids": [], "patient_name": "Payer"}
-    create_resp = requests.post(f"{BASE_URLS['module_c']}/invoices/create", json=payload)
-    invoice_id = create_resp.json()['id']
-    
-    # Оплачиваем
-    pay_resp = requests.post(f"{BASE_URLS['module_c']}/invoices/{invoice_id}/pay")
-    assert pay_resp.status_code == 200
-    assert pay_resp.json()['status'] == 'оплачен'
-    print("✅ Модуль В: тест оплаты счёта пройден")
-
-def test_cross_module_integration():
-    """Сквозной тест: услуги → назначение → счёт"""
-    # Получаем услуги из модуля А
-    services = requests.get(f"{BASE_URLS['module_a']}/services").json()
-    service_ids = [s['id'] for s in services[:2]]
-    
-    # Получаем лекарства из модуля Б
-    medicines = requests.get(f"{BASE_URLS['module_b']}/medicines").json()
-    medicine_ids = [m['id'] for m in medicines[:1]]
-    
-    # Создаём счёт в модуле В
-    invoice_payload = {
-        "service_ids": service_ids,
-        "medicine_ids": medicine_ids,
-        "patient_name": "E2E Test"
-    }
-    invoice = requests.post(f"{BASE_URLS['module_c']}/invoices/create", json=invoice_payload).json()
-    
-    assert invoice['total'] > 0
-    assert len(invoice['items']) == len(service_ids) + len(medicine_ids)
-    print(f"✅ Сквозной тест пройден: итоговая сумма = {invoice['total']} руб.")
-
-if __name__ == "__main__":
-    # Ждём запуска сервисов
-    print("⏳ Ожидание запуска сервисов...")
-    time.sleep(5)
-    
-    test_module_a_services()
-    test_module_a_licenses()
-    test_module_b_medicines()
-    test_module_b_appointments()
-    test_module_c_invoices()
-    test_module_c_create_invoice()
-    test_module_c_pay_invoice()
-    test_cross_module_integration()
-    
-    print("\n🎉 Все интеграционные тесты пройдены успешно!")
+        run: docker images | grep clinic-module

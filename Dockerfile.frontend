@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install flask flask-cors requests
+
+COPY frontend_server.py .
+COPY templates/ ./templates/
+
+EXPOSE 8080
+
+CMD ["python", "frontend_server.py"]

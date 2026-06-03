@@ -1,83 +1,83 @@
+"""
+Module C: Invoices
+"""
+
 from flask import Flask, request, jsonify
+from database import InvoiceRepository, PatientRepository, ServiceRepository, MedicineRepository, init_database
 
 app = Flask(__name__)
 
-invoices = []
-next_id = 1
+init_database()
 
-SERVICES = {
-    1: {"name": "Приём терапевта", "price": 1500},
-    2: {"name": "УЗИ", "price": 2500},
-    3: {"name": "Анализ крови", "price": 800}
-}
-
-MEDICINES = {
-    1: {"name": "Амоксициллин", "price": 300},
-    2: {"name": "Парацетамол", "price": 150},
-    3: {"name": "Нурофен", "price": 200}
-}
-
-@app.route('/')
-def root():
-    return {"message": "МИС Модуль В - Счета", "status": "ok"}
-
-@app.route('/health', methods=['GET'])
-def health():
-    return {"status": "ok", "module": "C"}
+@app.route('/invoices', methods=['GET'])
+def get_invoices():
+    invoices = InvoiceRepository.get_all()
+    return jsonify(invoices)
 
 @app.route('/invoices/create', methods=['POST'])
 def create_invoice():
-    global next_id
     data = request.get_json()
     
-    service_ids = data.get("service_ids", [])
-    medicine_ids = data.get("medicine_ids", [])
-    patient_name = data.get("patient_name", "Не указан")
+    patient_name = data.get('patient_name', 'Unknown')
+    service_ids = data.get('service_ids', [])
+    medicine_ids = data.get('medicine_ids', [])
     
-    total = 0
-    items = []
+    names = patient_name.split()
+    first_name = names[0] if len(names) > 0 else "Unknown"
+    last_name = names[1] if len(names) > 1 else "Unknown"
     
+    patient_id = PatientRepository.get_or_create(first_name, last_name)
+    
+    services = []
     for sid in service_ids:
-        if sid in SERVICES:
-            total += SERVICES[sid]["price"]
-            items.append(SERVICES[sid])
+        s = ServiceRepository.get_by_id(sid)
+        if s:
+            services.append(s)
     
+    medicines = []
     for mid in medicine_ids:
-        if mid in MEDICINES:
-            total += MEDICINES[mid]["price"]
-            items.append(MEDICINES[mid])
+        all_meds = MedicineRepository.get_all()
+        m = next((x for x in all_meds if x['Id'] == mid), None)
+        if m:
+            medicines.append(m)
     
-    invoice = {
-        "id": next_id,
+    total = sum(s['Price'] for s in services) + sum(m['Price'] for m in medicines)
+    
+    if total == 0:
+        return jsonify({"error": "No services or medicines selected"}), 400
+    
+    invoice_id = InvoiceRepository.create(patient_id, total)
+    
+    for s in services:
+        InvoiceRepository.add_item(invoice_id, 'service', s['Id'], s['Name'], float(s['Price']))
+    
+    for m in medicines:
+        InvoiceRepository.add_item(invoice_id, 'medicine', m['Id'], m['Name'], float(m['Price']))
+    
+    return jsonify({
+        "id": invoice_id,
         "patient": patient_name,
-        "items": items,
         "total": total,
-        "status": "не оплачен",
-        "created_at": "2026-06-03"
-    }
-    invoices.append(invoice)
-    next_id += 1
-    
-    return jsonify(invoice), 201
+        "status": "unpaid"
+    }), 201
 
-@app.route('/invoices', methods=['GET'])
-def list_invoices():
-    return jsonify(invoices)
+@app.route('/invoices/<int:invoice_id>/pay', methods=['POST'])
+def pay_invoice(invoice_id):
+    InvoiceRepository.pay(invoice_id)
+    return jsonify({"status": "paid", "id": invoice_id})
 
-@app.route('/invoices/<int:inv_id>/pay', methods=['POST'])
-def pay_invoice(inv_id):
-    inv = next((i for i in invoices if i["id"] == inv_id), None)
-    if not inv:
-        return jsonify({"error": "Счёт не найден"}), 404
-    inv["status"] = "оплачен"
-    return jsonify(inv)
+@app.route('/health', methods=['GET'])
+def health():
+    return {"status": "ok", "module": "C", "database": "connected"}
 
 if __name__ == '__main__':
-    print("Модуль В запущен на http://0.0.0.0:3000")
-    print("Доступные эндпоинты:")
-    print("  GET /health - проверка здоровья")
-    print("  POST /invoices/create - создать счёт")
-    print("  GET /invoices - список счетов")
-    print("  POST /invoices/{id}/pay - оплатить счёт")
-    # ВАЖНО: host='0.0.0.0' для Docker
+    print("=" * 50)
+    print("Module C (Invoices)")
+    print("Port: 3000")
+    print("Endpoints:")
+    print("  GET  /invoices           - list of invoices")
+    print("  POST /invoices/create    - create invoice")
+    print("  POST /invoices/<id>/pay  - pay invoice")
+    print("  GET  /health             - health check")
+    print("=" * 50)
     app.run(host='0.0.0.0', port=3000, debug=True)

@@ -51,3 +51,6 @@ if __name__ == "__main__":
     print("Модуль Б запущен на http://localhost:5002")
     print("Документация API: http://localhost:5002/docs")
     uvicorn.run(app, port=5002)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5002)

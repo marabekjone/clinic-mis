@@ -1,35 +1,43 @@
-from flask import Flask, jsonify
+"""
+Module A: Licenses and Services
+"""
+
+from flask import Flask, jsonify, request
+from database import ServiceRepository, LicenseRepository, init_database
 
 app = Flask(__name__)
 
-licenses = [
-    {"id": 1, "name": "Медицинская лицензия", "status": "активна"},
-    {"id": 2, "name": "Лицензия на телемедицину", "status": "активна"}
-]
-
-services = [
-    {"id": 1, "name": "Приём терапевта", "price": 1500},
-    {"id": 2, "name": "УЗИ", "price": 2500},
-    {"id": 3, "name": "Анализ крови", "price": 800}
-]
-
-@app.route('/licenses', methods=['GET'])
-def get_licenses():
-    return jsonify(licenses)
+init_database()
 
 @app.route('/services', methods=['GET'])
 def get_services():
+    services = ServiceRepository.get_all()
     return jsonify(services)
+
+@app.route('/services/<int:service_id>', methods=['GET'])
+def get_service(service_id):
+    service = ServiceRepository.get_by_id(service_id)
+    if service:
+        return jsonify(service)
+    return jsonify({"error": "Service not found"}), 404
+
+@app.route('/licenses', methods=['GET'])
+def get_licenses():
+    licenses = LicenseRepository.get_all()
+    return jsonify(licenses)
 
 @app.route('/health', methods=['GET'])
 def health():
-    return {"status": "ok", "module": "A"}
+    return {"status": "ok", "module": "A", "database": "connected"}
 
 if __name__ == '__main__':
-    print("Модуль А запущен на http://0.0.0.0:5001")
-    print("Доступные эндпоинты:")
-    print("  GET /licenses - список лицензий")
-    print("  GET /services - список услуг")
-    print("  GET /health - проверка здоровья")
-    # ВАЖНО: host='0.0.0.0' для Docker
+    print("=" * 50)
+    print("Module A (Licenses + Services)")
+    print("Port: 5001")
+    print("Endpoints:")
+    print("  GET  /services      - list of services")
+    print("  GET  /services/<id> - service by ID")
+    print("  GET  /licenses      - list of licenses")
+    print("  GET  /health        - health check")
+    print("=" * 50)
     app.run(host='0.0.0.0', port=5001, debug=True)

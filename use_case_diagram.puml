@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+title Use Case Diagram - Clinic Management System
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Patient" as patient
+actor "Doctor" as doctor
+actor "Admin" as admin
+actor "Payment System" as payment_system
+
+rectangle "Clinic MIS System" {
+  
+  usecase "View Services" as UC1
+  usecase "View Medicines" as UC2
+  usecase "Add to Cart" as UC3
+  usecase "Remove from Cart" as UC4
+  usecase "Checkout" as UC5
+  usecase "View Orders" as UC6
+  usecase "Manage Services" as UC7
+  usecase "Manage Medicines" as UC8
+  usecase "Process Payment" as UC9
+  usecase "Create Invoice" as UC10
+  usecase "View Reports" as UC11
+  
+  patient --> UC1
+  patient --> UC2
+  patient --> UC3
+  patient --> UC4
+  patient --> UC5
+  patient --> UC6
+  
+  admin --> UC7
+  admin --> UC8
+  admin --> UC11
+  
+  doctor --> UC6
+  doctor --> UC11
+  
+  UC5 ..> UC9 : <<include>>
+  UC5 ..> UC10 : <<include>>
+}
+
+note right of UC9
+  Payment is processed
+  by external payment system
+end note
+
+@enduml

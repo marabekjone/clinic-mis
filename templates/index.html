@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic MIS - Patient Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .card { border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 20px; }
+        .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px 15px 0 0 !important; }
+        .service-card { cursor: pointer; transition: all 0.3s ease; }
+        .service-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .cart-item { background: #f8f9fa; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1100; }
+        .loading { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading"><div class="spinner-border text-primary"></div><div class="mt-2 text-white">Processing...</div></div>
+    <div class="toast-container"></div>
+
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <h1 class="text-white"><i class="fas fa-clinic-medical"></i> Clinic Management System</h1>
+            <p class="text-white-50">Book services and order medications</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header"><h4><i class="fas fa-stethoscope"></i> Medical Services</h4></div>
+                    <div class="card-body"><div class="row" id="services-list"><div class="text-center text-white">Loading services...</div></div></div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-header"><h4><i class="fas fa-pills"></i> Medications</h4></div>
+                    <div class="card-body"><div class="row" id="medicines-list"><div class="text-center text-white">Loading medicines...</div></div></div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header"><h4><i class="fas fa-shopping-cart"></i> Your Cart</h4></div>
+                    <div class="card-body">
+                        <div id="cart-items"><p class="text-muted text-center">Cart is empty</p></div>
+                        <hr>
+                        <div class="d-flex justify-content-between"><strong>Total:</strong><strong id="cart-total">$0.00</strong></div>
+                        <button class="btn btn-success w-100 mt-3" onclick="checkout()" id="checkoutBtn" disabled><i class="fas fa-credit-card"></i> Checkout</button>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-header"><h4><i class="fas fa-history"></i> Recent Orders</h4></div>
+                    <div class="card-body"><div id="orders-list"><p class="text-muted text-center">No orders yet</p></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let servicesList = [];
+        let medicinesList = [];
+
+        function showToast(message, type) {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast show position-relative mb-2';
+            toast.innerHTML = `<div class="toast-header bg-${type} text-white"><strong>Notification</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div><div class="toast-body">${message}</div>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function updateCart() {
+            const container = document.getElementById('cart-items');
+            const totalSpan = document.getElementById('cart-total');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Cart is empty</p>';
+                totalSpan.textContent = '$0.00';
+                checkoutBtn.disabled = true;
+                return;
+            }
+            
+            let total = 0;
+            container.innerHTML = '';
+            cart.forEach((item, idx) => {
+                total += item.price * item.quantity;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div><strong>${item.name}</strong><br><small>$${item.price} x ${item.quantity}</small></div>
+                            <div><span class="fw-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                            <button class="btn btn-sm btn-danger ms-2" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></button></div>
+                        </div>
+                    </div>
+                `;
+            });
+            totalSpan.textContent = `$${total.toFixed(2)}`;
+            checkoutBtn.disabled = false;
+        }
+
+        function addToCart(type, id, name, price) {
+            const existing = cart.find(i => i.type === type && i.id === id);
+            if (existing) {
+                existing.quantity++;
+                showToast(`${name} quantity increased`, 'info');
+            } else {
+                cart.push({ type, id, name, price, quantity: 1 });
+                showToast(`${name} added to cart`, 'success');
+            }
+            updateCart();
+        }
+
+        function removeFromCart(idx) {
+            const removed = cart[idx];
+            cart.splice(idx, 1);
+            updateCart();
+            showToast(`${removed.name} removed`, 'warning');
+        }
+
+        async function checkout() {
+            if (cart.length === 0) { showToast('Cart is empty', 'error'); return; }
+            
+            const patientName = prompt('Enter patient name:', 'Patient Name');
+            if (!patientName) return;
+            
+            const serviceIds = cart.filter(i => i.type === 'service').map(i => i.id);
+            const medicineIds = cart.filter(i => i.type === 'medicine').map(i => i.id);
+            
+            document.getElementById('loading').style.display = 'flex';
+            
+            try {
+                const res = await fetch('/api/invoices/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patient_name: patientName, service_ids: serviceIds, medicine_ids: medicineIds })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(`Order created! Invoice #${data.id} - $${data.total}`, 'success');
+                    cart = [];
+                    updateCart();
+                    loadOrders();
+                } else {
+                    showToast('Failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch(e) {
+                showToast('Network error: ' + e.message, 'error');
+            }
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function loadServices() {
+            try {
+                const res = await fetch('/api/services');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                servicesList = await res.json();
+                const container = document.getElementById('services-list');
+                
+                if (!servicesList || servicesList.length === 0) {
+                    container.innerHTML = '<div class="alert alert-warning">No services available</div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                servicesList.forEach(s => {
+                    container.innerHTML += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card service-card" onclick="addToCart('service', ${s.Id}, '${s.Name}', ${s.Price})">
+                                <div class="card-body">
+                                    <h6>${s.Name}</h6>
+                                    <p class="text-muted small">${s.Category || 'Medical service'}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold text-primary">$${s.Price}</span>
+                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-cart-plus"></i> Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                console.error('Error loading services:', e);
+                document.getElementById('services-list').innerHTML = `<div class="alert alert-danger">Error loading services: ${e.message}</div>`;
+            }
+        }
+
+        async function loadMedicines() {
+            try {
+                const res = await fetch('/api/medicines');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                medicinesList = await res.json();
+                const container = document.getElementById('medicines-list');
+                
+                if (!medicinesList || medicinesList.length === 0) {
+                    container.innerHTML = '<div class="alert alert-warning">No medicines available</div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                medicinesList.forEach(m => {
+                    container.innerHTML += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card service-card" onclick="addToCart('medicine', ${m.id || m.Id}, '${m.name || m.Name}', ${m.price || m.Price})">
+                                <div class="card-body">
+                                    <h6>${m.name || m.Name}</h6>
+                                    <p class="text-muted small">${m.dosage || m.Dosage || 'Medication'}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold text-primary">$${m.price || m.Price}</span>
+                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-cart-plus"></i> Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                console.error('Error loading medicines:', e);
+                document.getElementById('medicines-list').innerHTML = `<div class="alert alert-danger">Error loading medicines: ${e.message}</div>`;
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const res = await fetch('/api/invoices');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const orders = await res.json();
+                const container = document.getElementById('orders-list');
+                
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">No orders yet</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                orders.slice(-5).reverse().forEach(o => {
+                    const statusColor = o.Status === 'paid' || o.status === 'paid' ? 'success' : 'warning';
+                    const status = o.Status || o.status || 'unpaid';
+                    const amount = o.TotalAmount || o.total || 0;
+                    const orderId = o.Id || o.id;
+                    container.innerHTML += `
+                        <div class="cart-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div><small>#${orderId}</small><br><strong>$${amount}</strong></div>
+                                <div><span class="badge bg-${statusColor}">${status}</span></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                console.error('Error loading orders:', e);
+            }
+        }
+
+        // Initialize
+        loadServices();
+        loadMedicines();
+        loadOrders();
+        setInterval(loadOrders, 10000);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

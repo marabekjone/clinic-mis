@@ -1,0 +1,82 @@
+================================================================================
+                    UML USE CASE DIAGRAM - CLINIC MIS
+================================================================================
+
+                              ┌─────────────────────────────────────┐
+                              │         Clinic Management System     │
+                              │                                     │
+                              │  ┌─────────────┐    ┌─────────────┐ │
+                              │  │ View        │    │ View        │ │
+                              │  │ Services    │    │ Medicines   │ │
+                              │  └─────────────┘    └─────────────┘ │
+                              │                                     │
+    ┌─────────────┐           │  ┌─────────────┐    ┌─────────────┐ │
+    │   Patient   │───────────┼─▶│ Add to Cart │    │ Remove from │ │
+    │             │           │  └─────────────┘    │    Cart     │ │
+    └─────────────┘           │                     └─────────────┘ │
+                              │                                     │
+    ┌─────────────┐           │  ┌─────────────┐    ┌─────────────┐ │
+    │   Doctor    │───────────┼─▶│ View Orders │    │ View        │ │
+    └─────────────┘           │  └─────────────┘    │ Reports     │ │
+                              │                     └─────────────┘ │
+    ┌─────────────┐           │                                     │
+    │    Admin    │───────────┼─▶┌─────────────┐  ┌─────────────┐   │
+    └─────────────┘           │  │ Manage      │  │ Manage      │   │
+                              │  │ Services    │  │ Medicines   │   │
+                              │  └─────────────┘  └─────────────┘   │
+                              │                                     │
+                              │  ┌─────────────┐                    │
+                              │  │ Checkout    │                    │
+                              │  └─────────────┘                    │
+                              │         │                           │
+                              │         │ <<include>>               │
+                              │         ▼                           │
+                              │  ┌─────────────┐    ┌─────────────┐ │
+                              │  │ Process     │    │ Create      │ │
+                              │  │ Payment     │    │ Invoice     │ │
+                              │  └─────────────┘    └─────────────┘ │
+                              │         ▲                           │
+                              │         │                           │
+                              └─────────┼───────────────────────────┘
+                                        │
+                              ┌─────────┴─────────┐
+                              │   Payment System  │
+                              └───────────────────┘
+
+================================================================================
+ACTORS DESCRIPTION:
+================================================================================
+
+| Actor           | Description                                      |
+|-----------------|--------------------------------------------------|
+| Patient         | End user who books services and buys medicines  |
+| Doctor          | Medical professional who views patient orders   |
+| Admin           | System administrator who manages catalog        |
+| Payment System  | External payment processing service             |
+
+================================================================================
+USE CASES DESCRIPTION:
+================================================================================
+
+| ID  | Use Case         | Description                                      |
+|-----|------------------|--------------------------------------------------|
+| UC1 | View Services    | Patient browses available medical services      |
+| UC2 | View Medicines   | Patient browses available medications           |
+| UC3 | Add to Cart      | Patient adds items to shopping cart             |
+| UC4 | Remove from Cart | Patient removes items from cart                 |
+| UC5 | Checkout         | Patient places order and proceeds to payment    |
+| UC6 | View Orders      | Patient/Doctor views order history              |
+| UC7 | Manage Services  | Admin adds/updates/deletes services             |
+| UC8 | Manage Medicines | Admin adds/updates/deletes medicines            |
+| UC9 | Process Payment  | System processes payment via external gateway   |
+| UC10| Create Invoice   | System generates invoice for order              |
+| UC11| View Reports     | Admin/Doctor views system reports               |
+
+================================================================================
+INCLUDE RELATIONSHIPS:
+================================================================================
+
+Checkout (UC5) ---<<include>>---> Process Payment (UC9)
+Checkout (UC5) ---<<include>>---> Create Invoice (UC10)
+
+================================================================================
